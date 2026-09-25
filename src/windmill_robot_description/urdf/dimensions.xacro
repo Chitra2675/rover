@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="windmill_ugv_dimensions">
+  <!--
+    dimensions.xacro
+    ================
+    Single source of truth for all robot geometry and mass.
+    Edit values here only — everything else derives from these.
+    Units: metres, kilograms, radians.
+
+    Coordinate convention:
+      +X = FRONT   -X = REAR
+      +Y = LEFT    -Y = RIGHT
+      +Z = UP
+  -->
+  <!-- Note: pi is built into xacro — do not redefine it -->
+
+  <!-- track_width: centre-to-centre distance between left and right wheels -->
+  <xacro:property name="track_width" value="0.440"/>
+
+  <!-- ============================================================
+       CHASSIS
+       Bottom of chassis sits at chassis_bottom_z above ground.
+       Wheel centres sit at wheel_radius above ground.
+       Chassis bottom must be ABOVE wheel top to avoid clipping.
+         wheel_top = wheel_radius * 2 = 0.200 m
+         chassis_bottom = 0.210 m  (10 mm clearance above wheel top)
+  ============================================================ -->
+  <xacro:property name="chassis_length"    value="0.650"/>
+  <xacro:property name="chassis_width"     value="0.500"/>
+  <xacro:property name="chassis_height"    value="0.140"/>
+  <xacro:property name="chassis_bottom_z"  value="0.210"/>
+  <xacro:property name="chassis_top_z"     value="${chassis_bottom_z + chassis_height}"/>
+  <xacro:property name="chassis_centre_z"  value="${chassis_bottom_z + chassis_height/2.0}"/>
+
+  <!-- Underbody skid plate (thin protective plate under chassis) -->
+  <xacro:property name="underbody_thickness" value="0.008"/>
+  <xacro:property name="underbody_length"    value="0.600"/>
+  <xacro:property name="underbody_width"     value="0.460"/>
+
+  <!-- ============================================================
+       WHEELS  — 6 wheel skid steer
+       All wheel centres at z = wheel_radius (touches ground at z=0)
+  ============================================================ -->
+  <xacro:property name="wheel_radius"    value="0.100"/>
+  <xacro:property name="wheel_width"     value="0.060"/>
+  <xacro:property name="wheel_center_z"  value="${wheel_radius}"/>
+
+  <!-- Wheel positions -->
+  <xacro:property name="wheel_x_front"  value=" 0.210"/>
+  <xacro:property name="wheel_x_middle" value=" 0.000"/>
+  <xacro:property name="wheel_x_rear"   value="-0.210"/>
+  <xacro:property name="wheel_y_left"   value=" 0.220"/>  <!-- half track + half wheel_width -->
+  <xacro:property name="wheel_y_right"  value="-0.220"/>
+
+  <!-- Ground clearance (bottom of chassis above ground) -->
+  <xacro:property name="ground_clearance" value="${chassis_bottom_z}"/>
+
+  <!-- ============================================================
+       LANDING PLATFORM
+       Posts connect chassis top (chassis_top_z) to pad underside.
+       Pad sits at landing_pad_z; pad top = landing_pad_z + landing_pad_thickness
+  ============================================================ -->
+  <xacro:property name="landing_pad_length"    value="0.400"/>
+  <xacro:property name="landing_pad_width"     value="0.400"/>
+  <xacro:property name="landing_pad_thickness" value="0.012"/>
+  <xacro:property name="landing_pad_z"         value="0.520"/>  <!-- underside of pad above ground -->
+
+  <!-- Support posts: from chassis top to pad underside -->
+  <xacro:property name="landing_post_radius"   value="0.012"/>
+  <xacro:property name="landing_post_height"   value="${landing_pad_z - chassis_top_z}"/>
+  <xacro:property name="landing_post_offset_x" value="0.160"/>
+  <xacro:property name="landing_post_offset_y" value="0.160"/>
+
+  <!-- Landing guides (corner bumpers on pad surface) -->
+  <xacro:property name="landing_guide_radius"   value="0.010"/>
+  <xacro:property name="landing_guide_height"   value="0.040"/>
+  <xacro:property name="landing_guide_offset_x" value="0.175"/>
+  <xacro:property name="landing_guide_offset_y" value="0.175"/>
+
+  <!-- ============================================================
+       CHARGING COIL + FIDUCIAL MARKER
+  ============================================================ -->
+  <xacro:property name="charging_coil_diameter"  value="0.150"/>
+  <xacro:property name="charging_coil_thickness" value="0.006"/>
+  <xacro:property name="fiducial_marker_size"     value="0.100"/>
+  <xacro:property name="fiducial_marker_thickness" value="0.002"/>
+
+  <!-- ============================================================
+       SENSORS
+  ============================================================ -->
+  <!-- LiDAR: front-centre, above chassis top, unobstructed 360 deg -->
+  <xacro:property name="lidar_x"       value="0.180"/>
+  <xacro:property name="lidar_z"       value="${chassis_top_z + 0.060}"/>
+  <xacro:property name="lidar_radius"  value="0.037"/>
+  <xacro:property name="lidar_height_dim" value="0.050"/>
+
+  <!-- Camera: front face of chassis, pointing forward -->
+  <xacro:property name="camera_x"     value="0.330"/>
+  <xacro:property name="camera_z"     value="${chassis_centre_z + 0.020}"/>
+
+  <!-- IMU: chassis centre -->
+  <xacro:property name="imu_z"        value="${chassis_centre_z}"/>
+
+  <!-- GPS: rear top, clear sky view, away from landing pad centre -->
+  <xacro:property name="gps_x"        value="-0.240"/>
+  <xacro:property name="gps_z"        value="${chassis_top_z + 0.100}"/>
+
+  <!-- Sensor mast (cylinder holding LiDAR above chassis) -->
+  <xacro:property name="sensor_mast_radius" value="0.020"/>
+  <xacro:property name="sensor_mast_height" value="0.040"/>
+
+  <!-- ============================================================
+       ELECTRONICS ENVELOPES
+  ============================================================ -->
+  <xacro:property name="jetson_length" value="0.180"/>
+  <xacro:property name="jetson_width"  value="0.130"/>
+  <xacro:property name="jetson_height" value="0.060"/>
+
+  <xacro:property name="battery_length" value="0.220"/>
+  <xacro:property name="battery_width"  value="0.120"/>
+  <xacro:property name="battery_height" value="0.070"/>
+
+  <xacro:property name="arduino_mega_length" value="0.110"/>
+  <xacro:property name="arduino_mega_width"  value="0.060"/>
+  <xacro:property name="arduino_mega_height" value="0.025"/>
+
+  <xacro:property name="arduino_nano_length" value="0.045"/>
+  <xacro:property name="arduino_nano_width"  value="0.020"/>
+  <xacro:property name="arduino_nano_height" value="0.010"/>
+
+  <xacro:property name="motor_driver_length" value="0.090"/>
+  <xacro:property name="motor_driver_width"  value="0.060"/>
+  <xacro:property name="motor_driver_height" value="0.025"/>
+
+  <xacro:property name="pdu_length" value="0.100"/>
+  <xacro:property name="pdu_width"  value="0.070"/>
+  <xacro:property name="pdu_height" value="0.025"/>
+
+  <xacro:property name="buck_length" value="0.060"/>
+  <xacro:property name="buck_width"  value="0.040"/>
+  <xacro:property name="buck_height" value="0.020"/>
+
+  <xacro:property name="boost_length" value="0.060"/>
+  <xacro:property name="boost_width"  value="0.040"/>
+  <xacro:property name="boost_height" value="0.020"/>
+
+  <xacro:property name="ups_length" value="0.100"/>
+  <xacro:property name="ups_width"  value="0.070"/>
+  <xacro:property name="ups_height" value="0.025"/>
+
+  <xacro:property name="enclosure_length" value="0.420"/>
+  <xacro:property name="enclosure_width"  value="0.360"/>
+  <xacro:property name="enclosure_height" value="0.110"/>
+
+  <!-- Motor placeholder -->
+  <xacro:property name="motor_radius" value="0.032"/>
+  <xacro:property name="motor_length" value="0.065"/>
+
+  <!-- ============================================================
+       MASS ASSUMPTIONS [kg]
+       Total target: ~22 kg
+  ============================================================ -->
+  <xacro:property name="chassis_mass"       value="6.80"/>
+  <xacro:property name="underbody_mass"     value="0.60"/>
+  <xacro:property name="wheel_mass"         value="0.80"/>
+  <xacro:property name="motor_mass"         value="0.55"/>
+  <xacro:property name="landing_pad_mass"   value="0.80"/>
+  <xacro:property name="landing_post_mass"  value="0.08"/>
+  <xacro:property name="landing_guide_mass" value="0.03"/>
+  <xacro:property name="battery_mass"       value="2.20"/>
+  <xacro:property name="jetson_mass"        value="0.50"/>
+  <xacro:property name="arduino_mega_mass"  value="0.04"/>
+  <xacro:property name="arduino_nano_mass"  value="0.01"/>
+  <xacro:property name="motor_driver_mass"  value="0.15"/>
+  <xacro:property name="pdu_mass"           value="0.12"/>
+  <xacro:property name="buck_mass"          value="0.08"/>
+  <xacro:property name="boost_mass"         value="0.08"/>
+  <xacro:property name="ups_mass"           value="0.15"/>
+  <xacro:property name="lidar_mass"         value="0.35"/>
+  <xacro:property name="camera_mass"        value="0.10"/>
+  <xacro:property name="imu_mass"           value="0.03"/>
+  <xacro:property name="gps_mass"           value="0.08"/>
+  <xacro:property name="charging_coil_mass" value="0.20"/>
+  <xacro:property name="fiducial_mass"      value="0.005"/>
+  <xacro:property name="sensor_mount_mass"  value="0.15"/>
+  <xacro:property name="misc_mass"          value="0.90"/>
+
+</robot>

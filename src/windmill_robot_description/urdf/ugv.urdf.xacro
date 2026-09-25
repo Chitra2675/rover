@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!--
+  ugv.urdf.xacro
+  ==============
+  Master robot description — includes all modules and instantiates six wheels.
+
+  TF tree:
+    map (SLAM/Nav2 at runtime)
+     └── odom (diff-drive plugin)
+          └── base_footprint
+               └── base_link
+                    ├── chassis_link
+                    ├── underbody_skid_link
+                    ├── electronics_enclosure_link
+                    ├── front_left_wheel    ← continuous
+                    ├── front_right_wheel   ← continuous
+                    ├── middle_left_wheel   ← continuous
+                    ├── middle_right_wheel  ← continuous
+                    ├── rear_left_wheel     ← continuous
+                    ├── rear_right_wheel    ← continuous
+                    ├── [motor links x6]    ← fixed
+                    ├── sensor_mast_link
+                    ├── lidar_link → lidar_frame
+                    ├── camera_link → camera_frame
+                    ├── imu_link → imu_frame
+                    ├── gps_link → gps_frame
+                    ├── post_fl/fr/rl/rr_link
+                    ├── landing_platform_link
+                    │    ├── guide_fl/fr/rl/rr_link
+                    │    ├── charging_coil_link → charging_coil_frame
+                    │    ├── fiducial_marker_link → fiducial_marker_frame
+                    │    └── drone_dock_frame
+                    └── [electronics x8]    ← fixed
+
+  ROS 2 topics (Gazebo Harmonic → ros_gz_bridge):
+    /cmd_vel          geometry_msgs/Twist      → drives robot
+    /odom             nav_msgs/Odometry        ← wheel odometry
+    /joint_states     sensor_msgs/JointState   ← 6 wheel joints
+    /scan             sensor_msgs/LaserScan    ← LiDAR 360 deg
+    /camera/image_raw sensor_msgs/Image        ← front camera
+    /imu/data         sensor_msgs/Imu          ← IMU 200 Hz
+    /gps/fix          sensor_msgs/NavSatFix    ← GPS 5 Hz
+    /tf + /tf_static  tf2_msgs/TFMessage       ← all transforms
+-->
+<robot name="windmill_ugv" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Order matters: dimensions first, then everything else -->
+  <xacro:include filename="$(find windmill_robot_description)/urdf/dimensions.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/chassis.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/wheel.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/suspension.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/landing_pad.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/sensors.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/electronics.xacro"/>
+  <xacro:include filename="$(find windmill_robot_description)/urdf/gazebo.xacro"/>
+
+  <!-- ============================================================
+       SIX DRIVEN WHEELS
+       All centres at z = wheel_center_z = wheel_radius = 0.100 m
+       (wheels touch ground at z = 0)
+  ============================================================ -->
+  <xacro:drive_wheel name="front_left"
+    x="${wheel_x_front}"  y="${wheel_y_left}"  z="${wheel_center_z}" side="left" motor_sign="1"/>
+
+  <xacro:drive_wheel name="middle_left"
+    x="${wheel_x_middle}" y="${wheel_y_left}"  z="${wheel_center_z}" side="left" motor_sign="1"/>
+
+  <xacro:drive_wheel name="rear_left"
+    x="${wheel_x_rear}"   y="${wheel_y_left}"  z="${wheel_center_z}" side="left" motor_sign="1"/>
+
+  <xacro:drive_wheel name="front_right"
+    x="${wheel_x_front}"  y="${wheel_y_right}" z="${wheel_center_z}" side="right" motor_sign="-1"/>
+
+  <xacro:drive_wheel name="middle_right"
+    x="${wheel_x_middle}" y="${wheel_y_right}" z="${wheel_center_z}" side="right" motor_sign="-1"/>
+
+  <xacro:drive_wheel name="rear_right"
+    x="${wheel_x_rear}"   y="${wheel_y_right}" z="${wheel_center_z}" side="right" motor_sign="-1"/>
+
+  <!-- Wheel centre frames (for future odometry / suspension work) -->
+  <link name="front_left_wheel_frame"/>
+  <joint name="front_left_wheel_frame_joint" type="fixed">
+    <parent link="front_left_wheel"/><child link="front_left_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="middle_left_wheel_frame"/>
+  <joint name="middle_left_wheel_frame_joint" type="fixed">
+    <parent link="middle_left_wheel"/><child link="middle_left_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_left_wheel_frame"/>
+  <joint name="rear_left_wheel_frame_joint" type="fixed">
+    <parent link="rear_left_wheel"/><child link="rear_left_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="front_right_wheel_frame"/>
+  <joint name="front_right_wheel_frame_joint" type="fixed">
+    <parent link="front_right_wheel"/><child link="front_right_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="middle_right_wheel_frame"/>
+  <joint name="middle_right_wheel_frame_joint" type="fixed">
+    <parent link="middle_right_wheel"/><child link="middle_right_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_right_wheel_frame"/>
+  <joint name="rear_right_wheel_frame_joint" type="fixed">
+    <parent link="rear_right_wheel"/><child link="rear_right_wheel_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>

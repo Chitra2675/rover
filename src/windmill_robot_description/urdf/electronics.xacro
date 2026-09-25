@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="windmill_ugv_electronics">
+  <xacro:macro name="box_component" params="name parent mass length width height xyz material">
+    <link name="${name}_link">
+      <inertial><origin xyz="0 0 ${height/2.0}"/><mass value="${mass}"/>
+        <inertia ixx="${mass/12.0*(width*width+height*height)}" ixy="0" ixz="0" iyy="${mass/12.0*(length*length+height*height)}" iyz="0" izz="${mass/12.0*(length*length+width*width)}"/>
+      </inertial>
+      <visual><origin xyz="0 0 ${height/2.0}"/><geometry><box size="${length} ${width} ${height}"/></geometry><material name="${material}"/></visual>
+    </link>
+    <joint name="${name}_joint" type="fixed"><parent link="${parent}"/><child link="${name}_link"/><origin xyz="${xyz}"/></joint>
+    <link name="${name}_frame"/>
+    <joint name="${name}_frame_joint" type="fixed"><parent link="${name}_link"/><child link="${name}_frame"/><origin xyz="0 0 ${height}"/></joint>
+  </xacro:macro>
+
+  <xacro:box_component name="battery" parent="base_link" mass="${battery_mass}" length="${battery_length}" width="${battery_width}" height="${battery_height}" xyz="0.000 0.000 ${chassis_bottom_z + 0.018}" material="battery_blue"/>
+  <xacro:box_component name="jetson" parent="base_link" mass="${jetson_mass}" length="${jetson_length}" width="${jetson_width}" height="${jetson_height}" xyz="-0.060 0.130 ${chassis_bottom_z + 0.020}" material="electronics_green"/>
+  <xacro:box_component name="arduino_mega" parent="base_link" mass="${arduino_mega_mass}" length="${arduino_mega_length}" width="${arduino_mega_width}" height="${arduino_mega_height}" xyz="0.090 -0.110 ${chassis_bottom_z + 0.020}" material="electronics_green"/>
+  <xacro:box_component name="arduino_nano" parent="base_link" mass="${arduino_nano_mass}" length="${arduino_nano_length}" width="${arduino_nano_width}" height="${arduino_nano_height}" xyz="0.090 0.000 ${chassis_bottom_z + 0.020}" material="electronics_green"/>
+  <xacro:box_component name="motor_driver" parent="base_link" mass="${motor_driver_mass}" length="${motor_driver_length}" width="${motor_driver_width}" height="${motor_driver_height}" xyz="-0.160 -0.120 ${chassis_bottom_z + 0.020}" material="electronics_green"/>
+  <xacro:box_component name="power_distribution" parent="base_link" mass="${pdu_mass}" length="${pdu_length}" width="${pdu_width}" height="${pdu_height}" xyz="-0.160 0.100 ${chassis_bottom_z + 0.020}" material="metal"/>
+  <xacro:box_component name="buck_converter" parent="base_link" mass="${buck_mass}" length="${buck_length}" width="${buck_width}" height="${buck_height}" xyz="0.180 0.100 ${chassis_bottom_z + 0.020}" material="metal"/>
+  <xacro:box_component name="boost_converter" parent="base_link" mass="${boost_mass}" length="${boost_length}" width="${boost_width}" height="${boost_height}" xyz="0.180 -0.100 ${chassis_bottom_z + 0.020}" material="metal"/>
+  <xacro:box_component name="ups" parent="base_link" mass="${ups_mass}" length="${ups_length}" width="${ups_width}" height="${ups_height}" xyz="-0.060 -0.120 ${chassis_bottom_z + 0.020}" material="metal"/>
+</robot>

@@ -1,0 +1,243 @@
+<?xml version="1.0"?>
+<!--
+  landing_pad.xacro
+  =================
+  Drone landing platform assembly.
+
+  Layout (z from ground up):
+    chassis_top_z           = 0.350 m  (chassis_bottom_z + chassis_height)
+    landing_pad_z           = 0.380 m  (underside of pad)
+    landing post height     = landing_pad_z - chassis_top_z = 0.030 m
+    pad top                 = landing_pad_z + landing_pad_thickness
+
+  Posts connect from chassis_top_z to pad underside.
+  All pad items (guides, coil, fiducial, dock frame) attach to landing_platform_link.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="windmill_ugv_landing_pad">
+
+  <!-- ============================================================
+       LANDING PLATFORM SURFACE
+  ============================================================ -->
+  <link name="landing_platform_link">
+    <inertial>
+      <origin xyz="0 0 ${landing_pad_thickness/2.0}"/>
+      <mass value="${landing_pad_mass}"/>
+      <inertia
+        ixx="${landing_pad_mass/12.0*(landing_pad_width*landing_pad_width + landing_pad_thickness*landing_pad_thickness)}"
+        ixy="0" ixz="0"
+        iyy="${landing_pad_mass/12.0*(landing_pad_length*landing_pad_length + landing_pad_thickness*landing_pad_thickness)}"
+        iyz="0"
+        izz="${landing_pad_mass/12.0*(landing_pad_length*landing_pad_length + landing_pad_width*landing_pad_width)}"/>
+    </inertial>
+
+    <!-- Main pad surface (white) -->
+    <visual>
+      <origin xyz="0 0 ${landing_pad_thickness/2.0}"/>
+      <geometry>
+        <box size="${landing_pad_length} ${landing_pad_width} ${landing_pad_thickness}"/>
+      </geometry>
+      <material name="landing_white"/>
+    </visual>
+
+    <!-- H-pattern markings on pad (visual only, 4 thin bars) -->
+    <visual>
+      <origin xyz="0 0 ${landing_pad_thickness + 0.001}"/>
+      <geometry>
+        <box size="${landing_pad_length * 0.80} 0.015 0.001"/>
+      </geometry>
+      <material name="landing_dark"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 ${landing_pad_thickness + 0.001}"/>
+      <geometry>
+        <box size="0.015 ${landing_pad_width * 0.80} 0.001"/>
+      </geometry>
+      <material name="landing_dark"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 ${landing_pad_thickness/2.0}"/>
+      <geometry>
+        <box size="${landing_pad_length} ${landing_pad_width} ${landing_pad_thickness}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Pad connects to base_link with its underside at landing_pad_z -->
+  <joint name="landing_platform_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="landing_platform_link"/>
+    <origin xyz="0 0 ${landing_pad_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       SUPPORT POSTS (4x)
+       Each post bottom sits at chassis_top_z.
+       Each post top reaches landing_pad_z (underside of pad).
+       Joint origin expressed in base_link frame.
+  ============================================================ -->
+  <xacro:macro name="landing_post" params="name px py">
+    <link name="${name}_link">
+      <inertial>
+        <origin xyz="0 0 ${landing_post_height/2.0}"/>
+        <mass value="${landing_post_mass}"/>
+        <inertia
+          ixx="${landing_post_mass/12.0*(3*landing_post_radius*landing_post_radius + landing_post_height*landing_post_height)}"
+          ixy="0" ixz="0"
+          iyy="${landing_post_mass/12.0*(3*landing_post_radius*landing_post_radius + landing_post_height*landing_post_height)}"
+          iyz="0"
+          izz="${0.5*landing_post_mass*landing_post_radius*landing_post_radius}"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 ${landing_post_height/2.0}"/>
+        <geometry>
+          <cylinder radius="${landing_post_radius}" length="${landing_post_height}"/>
+        </geometry>
+        <material name="post_silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${landing_post_height/2.0}"/>
+        <geometry>
+          <cylinder radius="${landing_post_radius}" length="${landing_post_height}"/>
+        </geometry>
+      </collision>
+    </link>
+    <!-- Post base at chassis_top_z in base_link frame -->
+    <joint name="${name}_joint" type="fixed">
+      <parent link="base_link"/>
+      <child  link="${name}_link"/>
+      <origin xyz="${px} ${py} ${chassis_top_z}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:landing_post name="post_fl" px=" ${landing_post_offset_x}" py=" ${landing_post_offset_y}"/>
+  <xacro:landing_post name="post_fr" px=" ${landing_post_offset_x}" py="-${landing_post_offset_y}"/>
+  <xacro:landing_post name="post_rl" px="-${landing_post_offset_x}" py=" ${landing_post_offset_y}"/>
+  <xacro:landing_post name="post_rr" px="-${landing_post_offset_x}" py="-${landing_post_offset_y}"/>
+
+  <!-- ============================================================
+       LANDING GUIDES (4x corner bumpers on pad surface)
+  ============================================================ -->
+  <xacro:macro name="landing_guide" params="name gx gy">
+    <link name="${name}_link">
+      <inertial>
+        <origin xyz="0 0 ${landing_guide_height/2.0}"/>
+        <mass value="${landing_guide_mass}"/>
+        <inertia
+          ixx="${landing_guide_mass/12.0*(3*landing_guide_radius*landing_guide_radius + landing_guide_height*landing_guide_height)}"
+          ixy="0" ixz="0"
+          iyy="${landing_guide_mass/12.0*(3*landing_guide_radius*landing_guide_radius + landing_guide_height*landing_guide_height)}"
+          iyz="0"
+          izz="${0.5*landing_guide_mass*landing_guide_radius*landing_guide_radius}"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 ${landing_guide_height/2.0}"/>
+        <geometry>
+          <cylinder radius="${landing_guide_radius}" length="${landing_guide_height}"/>
+        </geometry>
+        <material name="metal"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${landing_guide_height/2.0}"/>
+        <geometry>
+          <cylinder radius="${landing_guide_radius}" length="${landing_guide_height}"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="landing_platform_link"/>
+      <child  link="${name}_link"/>
+      <origin xyz="${gx} ${gy} ${landing_pad_thickness}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:landing_guide name="guide_fl" gx=" ${landing_guide_offset_x}" gy=" ${landing_guide_offset_y}"/>
+  <xacro:landing_guide name="guide_fr" gx=" ${landing_guide_offset_x}" gy="-${landing_guide_offset_y}"/>
+  <xacro:landing_guide name="guide_rl" gx="-${landing_guide_offset_x}" gy=" ${landing_guide_offset_y}"/>
+  <xacro:landing_guide name="guide_rr" gx="-${landing_guide_offset_x}" gy="-${landing_guide_offset_y}"/>
+
+  <!-- ============================================================
+       CHARGING COIL PLACEHOLDER
+       Embedded in pad surface, centred.
+  ============================================================ -->
+  <link name="charging_coil_link">
+    <inertial>
+      <origin xyz="0 0 ${charging_coil_thickness/2.0}"/>
+      <mass value="${charging_coil_mass}"/>
+      <inertia
+        ixx="${charging_coil_mass/12.0*(3*(charging_coil_diameter/2.0)**2 + charging_coil_thickness**2)}"
+        ixy="0" ixz="0"
+        iyy="${charging_coil_mass/12.0*(3*(charging_coil_diameter/2.0)**2 + charging_coil_thickness**2)}"
+        iyz="0"
+        izz="${0.5*charging_coil_mass*(charging_coil_diameter/2.0)**2}"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 ${charging_coil_thickness/2.0}"/>
+      <geometry>
+        <cylinder radius="${charging_coil_diameter/2.0}" length="${charging_coil_thickness}"/>
+      </geometry>
+      <material name="coil_copper"/>
+    </visual>
+    <!-- No collision — embedded in pad -->
+  </link>
+  <joint name="charging_coil_joint" type="fixed">
+    <parent link="landing_platform_link"/>
+    <child  link="charging_coil_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="charging_coil_frame"/>
+  <joint name="charging_coil_frame_joint" type="fixed">
+    <parent link="charging_coil_link"/>
+    <child  link="charging_coil_frame"/>
+    <origin xyz="0 0 ${charging_coil_thickness}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       FIDUCIAL MARKER PLACEHOLDER (AprilTag / ArUco)
+  ============================================================ -->
+  <link name="fiducial_marker_link">
+    <inertial>
+      <origin xyz="0 0 ${fiducial_marker_thickness/2.0}"/>
+      <mass value="${fiducial_mass}"/>
+      <inertia
+        ixx="${fiducial_mass/12.0*(fiducial_marker_size*fiducial_marker_size + fiducial_marker_thickness*fiducial_marker_thickness)}"
+        ixy="0" ixz="0"
+        iyy="${fiducial_mass/12.0*(fiducial_marker_size*fiducial_marker_size + fiducial_marker_thickness*fiducial_marker_thickness)}"
+        iyz="0"
+        izz="${fiducial_mass/6.0*fiducial_marker_size*fiducial_marker_size}"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 ${fiducial_marker_thickness/2.0}"/>
+      <geometry>
+        <box size="${fiducial_marker_size} ${fiducial_marker_size} ${fiducial_marker_thickness}"/>
+      </geometry>
+      <material name="fiducial_white"/>
+    </visual>
+    <!-- No collision -->
+  </link>
+  <joint name="fiducial_marker_joint" type="fixed">
+    <parent link="landing_platform_link"/>
+    <child  link="fiducial_marker_link"/>
+    <origin xyz="0 0 ${landing_pad_thickness + 0.001}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="fiducial_marker_frame"/>
+  <joint name="fiducial_marker_frame_joint" type="fixed">
+    <parent link="fiducial_marker_link"/>
+    <child  link="fiducial_marker_frame"/>
+    <origin xyz="0 0 ${fiducial_marker_thickness}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       DRONE DOCK FRAME — UAV touchdown reference
+       Sits slightly above pad surface, centred.
+  ============================================================ -->
+  <link name="drone_dock_frame"/>
+  <joint name="drone_dock_frame_joint" type="fixed">
+    <parent link="landing_platform_link"/>
+    <child  link="drone_dock_frame"/>
+    <origin xyz="0 0 ${landing_pad_thickness + 0.010}" rpy="0 0 0"/>
+  </joint>
+
+</robot>

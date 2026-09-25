@@ -1,0 +1,223 @@
+<?xml version="1.0"?>
+<!--
+  sensors.xacro
+  =============
+  LiDAR, camera, IMU, GPS — physical links and frames.
+  Gazebo sensor plugins live in gazebo.xacro.
+
+  All heights corrected to sit above chassis_top_z.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="windmill_ugv_sensors">
+
+  <!-- ============================================================
+       SENSOR MAST (small cylinder on chassis top supporting LiDAR)
+  ============================================================ -->
+  <link name="sensor_mast_link">
+    <inertial>
+      <origin xyz="0 0 ${sensor_mast_height/2.0}"/>
+      <mass value="${sensor_mount_mass}"/>
+      <inertia
+        ixx="${sensor_mount_mass/12.0*(3*sensor_mast_radius*sensor_mast_radius + sensor_mast_height*sensor_mast_height)}"
+        ixy="0" ixz="0"
+        iyy="${sensor_mount_mass/12.0*(3*sensor_mast_radius*sensor_mast_radius + sensor_mast_height*sensor_mast_height)}"
+        iyz="0"
+        izz="${0.5*sensor_mount_mass*sensor_mast_radius*sensor_mast_radius}"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 ${sensor_mast_height/2.0}"/>
+      <geometry>
+        <cylinder radius="${sensor_mast_radius}" length="${sensor_mast_height}"/>
+      </geometry>
+      <material name="metal_dark"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${sensor_mast_height/2.0}"/>
+      <geometry>
+        <cylinder radius="${sensor_mast_radius}" length="${sensor_mast_height}"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="sensor_mast_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="sensor_mast_link"/>
+    <origin xyz="${lidar_x} 0 ${chassis_top_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       LIDAR — RPLiDAR A1M8 (cylindrical, sits on mast top)
+       Centre at lidar_z above ground.
+  ============================================================ -->
+  <link name="lidar_link">
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="${lidar_mass}"/>
+      <inertia
+        ixx="${lidar_mass/12.0*(3*lidar_radius*lidar_radius + lidar_height_dim*lidar_height_dim)}"
+        ixy="0" ixz="0"
+        iyy="${lidar_mass/12.0*(3*lidar_radius*lidar_radius + lidar_height_dim*lidar_height_dim)}"
+        iyz="0"
+        izz="${0.5*lidar_mass*lidar_radius*lidar_radius}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height_dim}"/>
+      </geometry>
+      <material name="sensor_black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="${lidar_radius}" length="${lidar_height_dim}"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="lidar_link"/>
+    <origin xyz="${lidar_x} 0 ${chassis_top_z + sensor_mast_height}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- lidar_frame: sensor measurement origin (top of cylinder) -->
+  <link name="lidar_frame"/>
+  <joint name="lidar_frame_joint" type="fixed">
+    <parent link="lidar_link"/>
+    <child  link="lidar_frame"/>
+    <origin xyz="0 0 ${lidar_height_dim/2.0}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       CAMERA — Logitech C270 (forward facing, front of chassis)
+  ============================================================ -->
+  <link name="camera_link">
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="${camera_mass}"/>
+      <inertia
+        ixx="${camera_mass/12.0*(0.030*0.030 + 0.030*0.030)}"
+        ixy="0" ixz="0"
+        iyy="${camera_mass/12.0*(0.065*0.065 + 0.030*0.030)}"
+        iyz="0"
+        izz="${camera_mass/12.0*(0.065*0.065 + 0.030*0.030)}"/>
+    </inertial>
+    <!-- Camera body (wide, slim box) -->
+    <visual>
+      <geometry>
+        <box size="0.030 0.075 0.030"/>
+      </geometry>
+      <material name="sensor_black"/>
+    </visual>
+    <!-- Lens circle indicator -->
+    <visual>
+      <origin xyz="0.015 0 0" rpy="0 ${pi/2.0} 0"/>
+      <geometry>
+        <cylinder radius="0.010" length="0.005"/>
+      </geometry>
+      <material name="sensor_blue"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.030 0.075 0.030"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="camera_link"/>
+    <origin xyz="${chassis_length/2.0} 0 ${chassis_centre_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- camera_frame: REP-103 optical (+Z forward, +X right, +Y down) -->
+  <link name="camera_frame"/>
+  <joint name="camera_frame_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child  link="camera_frame"/>
+    <origin xyz="0 0 0" rpy="-${pi/2.0} 0 -${pi/2.0}"/>
+  </joint>
+
+  <!-- ============================================================
+       IMU — chassis centre
+  ============================================================ -->
+  <link name="imu_link">
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="${imu_mass}"/>
+      <inertia
+        ixx="${imu_mass/12.0*(0.035*0.035 + 0.010*0.010)}"
+        ixy="0" ixz="0"
+        iyy="${imu_mass/12.0*(0.025*0.025 + 0.010*0.010)}"
+        iyz="0"
+        izz="${imu_mass/12.0*(0.035*0.035 + 0.025*0.025)}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="0.035 0.025 0.010"/>
+      </geometry>
+      <material name="electronics_green"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.035 0.025 0.010"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="imu_link"/>
+    <origin xyz="0 0 ${imu_z}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="imu_frame"/>
+  <joint name="imu_frame_joint" type="fixed">
+    <parent link="imu_link"/>
+    <child  link="imu_frame"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ============================================================
+       GPS — rear top, clear sky view, away from landing pad
+  ============================================================ -->
+  <link name="gps_link">
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="${gps_mass}"/>
+      <inertia
+        ixx="${gps_mass/12.0*(3*0.030*0.030 + 0.020*0.020)}"
+        ixy="0" ixz="0"
+        iyy="${gps_mass/12.0*(3*0.030*0.030 + 0.020*0.020)}"
+        iyz="0"
+        izz="${0.5*gps_mass*0.030*0.030}"/>
+    </inertial>
+    <!-- Puck-shaped GPS antenna -->
+    <visual>
+      <geometry>
+        <cylinder radius="0.030" length="0.018"/>
+      </geometry>
+      <material name="gps_white"/>
+    </visual>
+    <!-- Thin mounting base -->
+    <visual>
+      <origin xyz="0 0 -0.014"/>
+      <geometry>
+        <cylinder radius="0.022" length="0.010"/>
+      </geometry>
+      <material name="metal_dark"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.030" length="0.018"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="gps_joint" type="fixed">
+    <parent link="base_link"/>
+    <child  link="gps_link"/>
+    <origin xyz="${gps_x} 0 ${gps_z}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="gps_frame"/>
+  <joint name="gps_frame_joint" type="fixed">
+    <parent link="gps_link"/>
+    <child  link="gps_frame"/>
+    <origin xyz="0 0 0.009" rpy="0 0 0"/>
+  </joint>
+
+</robot>
